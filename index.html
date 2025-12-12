@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>장애물 피하기 게임</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #f0f0f0; }
+        canvas { display: block; margin: 0 auto; background: #ffffff; border: 2px solid #000; }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="600" height="300"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let player = { x: 50, y: 250, width: 30, height: 30, dy: 0, jumpPower: -13, gravity: 0.6, onGround: true };
+let obstacles = [];
+let obstacleSpeed = 6;
+let score = 0;
+let gameOver = false;
+
+function jump() {
+    if (player.onGround) {
+        player.dy = player.jumpPower;
+        player.onGround = false;
+    }
+}
+
+document.addEventListener("keydown", e => { if (e.code === "Space") jump(); });
+document.addEventListener("mousedown", jump);
+
+function spawnObstacle() {
+    obstacles.push({ x: 600, y: 250, width: 20, height: 30 });
+}
+setInterval(spawnObstacle, 1200);
+
+function update() {
+    if (gameOver) return;
+
+    player.dy += player.gravity;
+    player.y += player.dy;
+
+    if (player.y >= 250) {
+        player.y = 250;
+        player.dy = 0;
+        player.onGround = true;
+    }
+
+    obstacles.forEach((o, i) => {
+        o.x -= obstacleSpeed;
+
+        if (
+            player.x < o.x + o.width &&
+            player.x + player.width > o.x &&
+            player.y < o.y + o.height &&
+            player.y + player.height > o.y
+        ) {
+            gameOver = true;
+        }
+
+        if (o.x + o.width < 0) {
+            obstacles.splice(i, 1);
+            score++;
+        }
+    });
+
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "blue";
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    ctx.fillStyle = "red";
+    obstacles.forEach(o => {
+        ctx.fillRect(o.x, o.y, o.width, o.height);
+    });
+
+    ctx.fillStyle = "black";
+    ctx.font = "20px Arial";
+    ctx.fillText("Score: " + score, 10, 25);
+
+    if (gameOver) {
+        ctx.fillStyle = "black";
+        ctx.font = "35px Arial";
+        ctx.fillText("GAME OVER", 200, 150);
+    }
+}
+
+update();
+</script>
+</body>
+</html>
